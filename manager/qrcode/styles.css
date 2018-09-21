@@ -1,0 +1,15 @@
+
+body {
+    text-align: center;
+}
+
+#container {
+    display: inline-block;
+    margin: 50px auto;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    -webkit-print-color-adjust: exact;
+}
+
+#img-buffer {
+    display: none;
+}

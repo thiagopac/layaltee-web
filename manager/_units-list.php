@@ -34,7 +34,7 @@
                </li>
             </ul>
          </div>
-         <a href="main.php?page=campaigns-new" class="btn btn-primary m-btn m-btn--custom m-btn--icon m-btn--air m-btn--pill">
+         <a href="main.php?page=units-new" class="btn btn-primary m-btn m-btn--custom m-btn--icon m-btn--air m-btn--pill">
          <span>
          <i class="fa fa-paper-plane"></i>
          <span>

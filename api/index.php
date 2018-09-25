@@ -101,7 +101,7 @@ function localInfo($localId){
                       AND L.DELETED != true";
 
     $sqlUnits = "SELECT U.ID AS unitId, U.LOCAL_ID AS localId, U.STREET AS localStreet, U.NUMBER AS localNumber, U.NEIBORHOOD AS localNeiborhood, U.CITY AS localCity, U.STATE AS localState,
-                        U.ZIPCODE as localZipcode
+                        U.ZIPCODE as localZipcode, U.LAT AS localLatitude, U.LON AS localLongitude, U.OPERATING_HOURS AS localOperatingHours, U.CONTACTS AS localContacts
                         FROM UNIT AS U
                         WHERE U.LOCAL_ID = :localId
                         ORDER BY U.ID DESC";
@@ -130,7 +130,7 @@ function localInfo($localId){
           $response->statusMessage = "Dados do local recuperados com sucesso.";
 
           $response->info = $localInfo;
-          $response->units = $unitsInfo;
+          $response->info->units = $unitsInfo;
 
           //OUTPUT
 			echo json_encode($response, JSON_NUMERIC_CHECK);

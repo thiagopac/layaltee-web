@@ -24,6 +24,7 @@ $app->get('/checkin/list/:userId/:localId','checkinList');
 $app->get('/local/info/:localId','localInfo');
 $app->get('/user/profile/:userId','getUserProfile');
 $app->get('/notifications/list/:userId/:localId','getNotificationsForUser');
+$app->get('/local/visual-settings/:localId','visualSettings');
 //POST ROUTES
 $app->post('/checkin/add','checkinAdd');
 $app->post('/user/profile/update','updateUserProfile');
@@ -99,23 +100,39 @@ function localInfo($localId){
                       WHERE L.ID = :localId
                       AND L.DELETED != true";
 
+    $sqlUnits = "SELECT U.ID AS unitId, U.LOCAL_ID AS localId, U.STREET AS localStreet, U.NUMBER AS localNumber, U.NEIBORHOOD AS localNeiborhood, U.CITY AS localCity, U.STATE AS localState,
+                        U.ZIPCODE as localZipcode
+                        FROM UNIT AS U
+                        WHERE U.LOCAL_ID = :localId
+                        ORDER BY U.ID DESC";
+
+
+
 	try{
-			$conn = getConn();
+        $conn = getConn();
 
-			//SQL AND BIND
-			$stmt = $conn->prepare($sqlLocalInfo);
-      $stmt->bindParam("localId",$localId);
-			$stmt->execute();
-      $localInfo = $stmt->fetch(PDO::FETCH_OBJ);
+          //SQL AND BIND
+          $stmt = $conn->prepare($sqlLocalInfo);
+          $stmt->bindParam("localId",$localId);
+          $stmt->execute();
+          $localInfo = $stmt->fetch(PDO::FETCH_OBJ);
 
-      //RESPONSE
-      $response = new stdClass();
-      $response->status = 1;
-      $response->statusMessage = "Dados do local recuperados com sucesso.";
+          //SQL AND BIND
+          $stmt = $conn->prepare($sqlUnits);
+          $stmt->bindParam("localId",$localId);
+          $stmt->execute();
+          $unitsInfo = $stmt->fetchAll(PDO::FETCH_OBJ);
 
-      $response->info = $localInfo;
 
-      //OUTPUT
+        //RESPONSE
+          $response = new stdClass();
+          $response->status = 1;
+          $response->statusMessage = "Dados do local recuperados com sucesso.";
+
+          $response->info = $localInfo;
+          $response->units = $unitsInfo;
+
+          //OUTPUT
 			echo json_encode($response, JSON_NUMERIC_CHECK);
 
 			$conn = null;
@@ -859,4 +876,42 @@ function updateUserToken(){
 
 			die();
 	}
+}
+
+function visualSettings($localId){
+
+    $sqlAssetsInfo = "SELECT AT.ID AS assetsId, AT.IMAGE_LOGO AS assetsImageLogo, AT.IMAGE_INFO AS assetsImageInfo, AT.IMAGE_FACEBOOK_SHARE AS assetsImageFacebookShare,
+                      AT.HASHTAG_FACEBOOK_SHARE AS assetsHashtagFacebookShare, AT.COUPON_NO AS assetsCouponNo, AT.COUPON_YES AS assetsCouponYes, AT.COLOR_PRIMARY AS assetsColorPrimary,
+                      AT.COLOR_SECONDARY AS assetsColorSecondary, AT.MAP_ZOOM AS assetsMapZoom, AT.LOCAL_ID AS localId
+                      FROM ASSETS AS AT
+                      WHERE AT.LOCAL_ID = :localId";
+
+    try{
+        $conn = getConn();
+
+        //SQL AND BIND
+        $stmt = $conn->prepare($sqlAssetsInfo);
+        $stmt->bindParam("localId",$localId);
+        $stmt->execute();
+        $assets = $stmt->fetch(PDO::FETCH_OBJ);
+
+        //RESPONSE
+        $response = new stdClass();
+        $response->status = 1;
+        $response->statusMessage = "Ajustes visuais recuperados com sucesso.";
+
+        $response->info = $assets;
+
+        //OUTPUT
+        echo json_encode($response, JSON_NUMERIC_CHECK);
+
+        $conn = null;
+
+    } catch(PDOException $e){
+
+        header('HTTP/1.1 400 Bad request');
+        echo json_encode($e->getMessage());
+
+        die();
+    }
 }

@@ -30,6 +30,9 @@ $app->get('/dashboard/rowone/:localId','dashBoardRowOne');
 $app->get('/dashboard/rowtwo/:localId','dashBoardRowTwo');
 $app->get('/dashboard/rowthree/:localId','dashBoardRowThree');
 $app->get('/dashboard/rowfour/:localId','dashBoardRowFour');
+$app->get('/local/visual-settings/:localId','visualSettings');
+$app->get('/unit/list/:localId','unitsList');
+$app->get('/unit/info/:unitId','unitList');
 //POST ROUTES
 $app->post('/admin/login','adminLogin');
 $app->post('/admin/profile/update','updateAdminProfile');
@@ -46,6 +49,8 @@ $app->post('/prize/delete','prizeDelete');
 $app->post('/push/sendpushnotification','sendPushNotification');
 $app->post('/user/forgotpassword','userForgotPassword');
 $app->post('/site/contact','siteContactForm');
+$app->post('/unit/info/update','updateUnitInfo');
+
 //DELETE ROUTES
 
 $app->run();
@@ -1871,5 +1876,272 @@ function siteContactForm() {
   $response->status = 1;
   $response->statusMessage = "Mensagem enviada com sucesso! Em breve entraremos em contato.";
   echo json_encode($response, JSON_NUMERIC_CHECK);
+
+}
+
+function visualSettings($localId){
+
+    $sqlAssetsInfo = "SELECT AT.ID AS assetsId, AT.IMAGE_LOGO AS assetsImageLogo, AT.IMAGE_INFO AS assetsImageInfo, AT.IMAGE_FACEBOOK_SHARE AS assetsImageFacebookShare,
+                      AT.HASHTAG_FACEBOOK_SHARE AS assetsHashtagFacebookShare, AT.COUPON_NO AS assetsCouponNo, AT.COUPON_YES AS assetsCouponYes, AT.COLOR_PRIMARY AS assetsColorPrimary,
+                      AT.COLOR_SECONDARY AS assetsColorSecondary, AT.MAP_ZOOM AS assetsMapZoom, AT.LOCAL_ID AS localId
+                      FROM ASSETS AS AT
+                      WHERE AT.LOCAL_ID = :localId";
+
+    try{
+        $conn = getConn();
+
+        //SQL AND BIND
+        $stmt = $conn->prepare($sqlAssetsInfo);
+        $stmt->bindParam("localId",$localId);
+        $stmt->execute();
+        $assets = $stmt->fetch(PDO::FETCH_OBJ);
+
+        //RESPONSE
+        $response = new stdClass();
+        $response->status = 1;
+        $response->statusMessage = "Ajustes visuais recuperados com sucesso.";
+
+        $response->info = $assets;
+
+        //OUTPUT
+        echo json_encode($response, JSON_NUMERIC_CHECK);
+
+        $conn = null;
+
+    } catch(PDOException $e){
+
+        header('HTTP/1.1 400 Bad request');
+        echo json_encode($e->getMessage());
+
+        die();
+    }
+}
+
+function updateUnitInfo(){
+
+    $request = \Slim\Slim::getInstance()->request();
+    $json = json_decode($request->getBody());
+
+    $sqlUnitInfoSelect = "SELECT U.ID AS unitId, U.LOCAL_ID AS localId, U.STREET AS localStreet, U.NUMBER AS localNumber, U.NEIBORHOOD AS localNeiborhood, U.CITY AS localCity,
+                          U.STATE AS localState, U.ZIPCODE AS localZipcode, U.LAT AS localLatitude, U.LON AS localLongitude, U.OPERATING_HOURS AS localOperatingHours,
+                          U.CONTACTS AS localContacts
+                          FROM UNIT AS U
+                          WHERE U.ID = :unitId";
+
+    $sqlUnitInfoInsert = "INSERT INTO UNIT (LOCAL_ID, STREET, NUMBER, NEIBORHOOD, CITY, STATE, ZIPCODE, LAT, LON, OPERATING_HOURS, CONTACTS)
+                            VALUES (:localId, :localStreet, :localNumber, :localNeiborhood, :localCity, :localState, :localZipcode, :localLatitude, :localLongitude, :localOperatingHours, :localContacts)";
+
+    $sqlUnitInfoUpdate = "UPDATE UNIT U SET ";
+
+    if ($json->localId) { $sqlUnitInfoUpdate .= "LOCAL_ID = :localId, "; }
+    if ($json->localStreet) { $sqlUnitInfoUpdate .= "STREET = :localStreet, "; }
+    if ($json->localNumber) { $sqlUnitInfoUpdate .= "NUMBER = :localNumber, "; }
+    if ($json->localNeiborhood) { $sqlUnitInfoUpdate .= "NEIBORHOOD = :localNeiborhood, ";}
+    if ($json->localCity) { $sqlUnitInfoUpdate .= "CITY = :localCity, "; }
+    if ($json->localState) { $sqlUnitInfoUpdate .= "STATE = :localState, "; }
+    if ($json->localZipcode) { $sqlUnitInfoUpdate .= "ZIPCODE = :localZipcode, "; }
+    if ($json->localLatitude) { $sqlUnitInfoUpdate .= "LAT = :localLatitude, "; }
+    if ($json->localLongitude) { $sqlUnitInfoUpdate .= "LON = :localLongitude, "; }
+    if ($json->localOperatingHours) { $sqlUnitInfoUpdate .= "OPERATING_HOURS = :localOperatingHours, "; }
+    if ($json->localContacts) { $sqlUnitInfoUpdate .= "CONTACTS = :localContacts "; }
+
+    $sqlUnitInfoUpdate .= "WHERE U.ID = :unitId";
+
+    try{
+        $conn = getConn();
+
+        //SELECT
+        //SQL AND BIND
+        $stmt = $conn->prepare($sqlUnitInfoSelect);
+        $stmt->bindParam("unitId",$json->unitId);
+        $stmt->execute();
+        $localInfo = $stmt->fetch(PDO::FETCH_OBJ);
+
+        if ($localInfo == null) {
+
+            //INSERT
+            //SQL AND BIND
+            $stmt = $conn->prepare($sqlUnitInfoInsert);
+            $stmt->bindParam("localId",$json->localId);
+            $stmt->bindParam("localStreet",$json->localStreet);
+            $stmt->bindParam("localNumber",$json->localNumber);
+            $stmt->bindParam("localNeiborhood",$json->localNeiborhood);
+            $stmt->bindParam("localCity",$json->localCity);
+            $stmt->bindParam("localState",$json->localState);
+            $stmt->bindParam("localZipcode",$json->localZipcode);
+            $stmt->bindParam("localLatitude",$json->localLatitude);
+            $stmt->bindParam("localLongitude",$json->localLongitude);
+            $stmt->bindParam("localOperatingHours",$json->localOperatingHours);
+            $stmt->bindParam("localContacts",$json->localContacts);
+
+            $stmt->execute();
+
+            //RESPONSE
+            $response = new stdClass();
+            $response->status = 1;
+            $response->statusMessage = "Local adicionado com sucesso.";
+
+            $local = new stdClass();
+            $local->unitId = $conn->lastInsertId();
+            $local->localId = $json->localId;
+            $local->localStreet = $json->localStreet;
+            $local->localNumber = $json->localNumber;
+            $local->localNeiborhood = $json->localNeiborhood;
+            $local->localCity = $json->localCity;
+            $local->localState = $json->localState;
+            $local->localZipcode = $json->localZipcode;
+            $local->localLatitude = $json->localLatitude;
+            $local->localLongitude = $json->localLongitude;
+            $local->localOperatingHours = $json->localOperatingHours;
+            $local->localContacts = $json->localContacts;
+
+            $response->info = $local;
+
+            echo json_encode($response, JSON_NUMERIC_CHECK);
+
+        }else{
+
+            //UPDATE
+            //SQL AND BIND
+            $stmt = $conn->prepare($sqlUnitInfoUpdate);
+
+//            echo json_encode($sqlUnitInfoUpdate, JSON_NUMERIC_CHECK);
+//            exit;
+
+
+            //CONDITIONS TO MATCH
+            if ($json->unitId) { $stmt->bindParam("unitId",$json->unitId); }
+            if ($json->localId) { $stmt->bindParam("localId",$json->localId); }
+            if ($json->localStreet) { $stmt->bindParam("localStreet",$json->localStreet); }
+            if ($json->localNumber) { $stmt->bindParam("localNumber",$json->localNumber); }
+            if ($json->localNeiborhood) { $stmt->bindParam("localNeiborhood",$json->localNeiborhood); }
+            if ($json->localCity) { $stmt->bindParam("localCity",$json->localCity); }
+            if ($json->localState) { $stmt->bindParam("localState",$json->localState); }
+            if ($json->localZipcode) { $stmt->bindParam("localZipcode",$json->localZipcode); }
+            if ($json->localLatitude) { $stmt->bindParam("localLatitude",$json->localLatitude); }
+            if ($json->localLongitude) { $stmt->bindParam("localLongitude",$json->localLongitude); }
+            if ($json->localOperatingHours) { $stmt->bindParam("localOperatingHours",$json->localOperatingHours); }
+            if ($json->localContacts) { $stmt->bindParam("localContacts",$json->localContacts); }
+
+
+            $stmt->execute();
+            $affectedData = $stmt->rowCount(); //número de linhas afetadas
+
+            if ($affectedData > 0) {
+                //RESPONSE
+                $response = new stdClass();
+                $response->status = 1;
+                $response->statusMessage = "Local alterado com sucesso.";
+
+                $stmt = $conn->prepare($sqlUnitInfoSelect);
+                $stmt->bindParam("unitId",$json->unitId);
+                $stmt->execute();
+                $localInfo = $stmt->fetch(PDO::FETCH_OBJ);
+
+                $response->info = $localInfo;
+
+                echo json_encode($response, JSON_NUMERIC_CHECK);
+            }else{
+                //RESPONSE
+                $response = new stdClass();
+                $response->status = 1; //não é código de erro pois o banco de dados pode não ter retornado linhas alteradas porque os dados enviados eram os mesmos já no banco de dados
+                $response->statusMessage = "Os dados do local não foram alterados pois não foram enviadas modificações.";
+
+                $stmt = $conn->prepare($sqlUnitInfoSelect);
+                $stmt->bindParam("localId",$json->localId);
+                $stmt->execute();
+                $localInfo = $stmt->fetch(PDO::FETCH_OBJ);
+
+                $response->info = $localInfo;
+
+                echo json_encode($response, JSON_NUMERIC_CHECK);
+            }
+        }
+
+        $conn = null;
+
+    } catch(PDOException $e){
+
+        header('HTTP/1.1 400 Bad request');
+        echo json_encode($e->getMessage());
+
+        die();
+    }
+}
+
+function unitsList($localId){
+
+    $sqlUnits = "SELECT U.ID AS unitId, U.LOCAL_ID AS localId, U.STREET AS localStreet, U.NUMBER AS localNumber, U.NEIBORHOOD AS localNeiborhood, U.CITY AS localCity, U.STATE AS localState,
+                        U.ZIPCODE as localZipcode
+                        FROM UNIT AS U
+                        WHERE U.LOCAL_ID = :localId
+                        ORDER BY U.ID DESC";
+
+    try{
+        $conn = getConn();
+
+        //SQL AND BIND
+        $stmt = $conn->prepare($sqlUnits);
+        $stmt->bindParam("localId",$localId);
+        $stmt->execute();
+        $unitsInfo = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        //RESPONSE
+        $response = new stdClass();
+        $response->status = 1;
+        $response->statusMessage = "Unidades recuperadas com sucesso.";
+
+        $response->units = $unitsInfo;
+
+        //OUTPUT
+        echo json_encode($response, JSON_NUMERIC_CHECK);
+
+        $conn = null;
+
+    } catch(PDOException $e){
+
+        header('HTTP/1.1 400 Bad request');
+        echo json_encode($e->getMessage());
+
+        die();
+    }
+
+}
+
+function unitList($unitId){
+
+    $sqlUnits = "SELECT U.ID AS unitId, U.LOCAL_ID AS localId, U.STREET AS localStreet, U.NUMBER AS localNumber, U.NEIBORHOOD AS localNeiborhood, U.CITY AS localCity, U.STATE AS localState,
+                        U.ZIPCODE as localZipcode, U.LAT AS localLatitude, U.LON AS localLongitude, U.OPERATING_HOURS AS localOperatingHours, U.CONTACTS AS localContacts
+                        FROM UNIT AS U
+                        WHERE U.ID = :unitId";
+
+    try{
+        $conn = getConn();
+
+        //SQL AND BIND
+        $stmt = $conn->prepare($sqlUnits);
+        $stmt->bindParam("unitId",$unitId);
+        $stmt->execute();
+        $info = $stmt->fetch(PDO::FETCH_OBJ);
+
+        //RESPONSE
+        $response = new stdClass();
+        $response->status = 1;
+        $response->statusMessage = "Unidade recuperada com sucesso.";
+
+        $response->info = $info;
+
+        //OUTPUT
+        echo json_encode($response, JSON_NUMERIC_CHECK);
+
+        $conn = null;
+
+    } catch(PDOException $e){
+
+        header('HTTP/1.1 400 Bad request');
+        echo json_encode($e->getMessage());
+
+        die();
+    }
 
 }

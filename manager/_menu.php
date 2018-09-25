@@ -2,7 +2,7 @@
    $page = $_GET["page"];
    $activeItem = "m-menu__item--open m-menu__item--expanded";
    $activeSubItem = "m-menu__item--active";
-   ?>
+?>
 <ul class="m-menu__nav  m-menu__nav--dropdown-submenu-arrow ">
    <li class="m-menu__item <?=$page == "dashboard" ? $activeItem : ""?>" aria-haspopup="true" >
       <a  href="main.php?page=dashboard" class="m-menu__link ">
@@ -23,6 +23,16 @@
       <i class="m-menu__ver-arrow la la-angle-right"></i>
       </a>
    </li>
+<!--    <li class="m-menu__item  --><?//=$page == "visual-settings" ? $activeItem : ""?><!--" aria-haspopup="true"  m-menu-submenu-toggle="hover">-->
+<!--        <a  href="main.php?page=visual-settings" class="m-menu__link">-->
+<!--            <span class="m-menu__item-here"></span>-->
+<!--            <i class="m-menu__link-icon fa fa-eye"></i>-->
+<!--            <span class="m-menu__link-text">-->
+<!--      Ajustes visuais-->
+<!--      </span>-->
+<!--            <i class="m-menu__ver-arrow la la-angle-right"></i>-->
+<!--        </a>-->
+<!--    </li>-->
    <li class="m-menu__item  m-menu__item--submenu <?=$page == "coupons-qrcode" || $page == "coupons-manual" || $page == "coupons-verify" ? $activeItem : ""?>" aria-haspopup="true"  m-menu-submenu-toggle="hover">
       <a  href="javascript:;" class="m-menu__link m-menu__toggle">
       <span class="m-menu__item-here"></span>
@@ -196,4 +206,77 @@
          </ul>
       </div>
    </li>
+    <li id="menu-unidades" style="visibility: hidden;" class="m-menu__item  m-menu__item--submenu <?=$page == "units-new" || $page == "units-list" || $page == "units-edit"?>" aria-haspopup="true"  m-menu-submenu-toggle="hover">
+        <a  href="javascript:;" class="m-menu__link m-menu__toggle">
+            <span class="m-menu__item-here"></span>
+            <i class="m-menu__link-icon fa fa-map-marker"></i>
+            <span class="m-menu__link-title">
+      <span class="m-menu__link-wrap">
+      <span class="m-menu__link-text">
+      Unidades
+      </span>
+      </span>
+      </span>
+            <i class="m-menu__ver-arrow la la-angle-right"></i>
+        </a>
+        <div class="m-menu__submenu ">
+            <span class="m-menu__arrow"></span>
+            <ul class="m-menu__subnav">
+                <li class="m-menu__item  m-menu__item--parent" aria-haspopup="true" >
+               <span class="m-menu__link">
+               <span class="m-menu__item-here"></span>
+               <span class="m-menu__link-title">
+               <span class="m-menu__link-wrap">
+               <span class="m-menu__link-text">
+               Unidades
+               </span>
+               </span>
+               </span>
+               </span>
+                </li>
+                <li class="m-menu__item <?=$page == "units-new" ? $activeSubItem : ""?>" aria-haspopup="true" >
+                    <a  href="main.php?page=units-new" class="m-menu__link ">
+                        <i class="m-menu__link-bullet m-menu__link-bullet--dot">
+                            <span></span>
+                        </i>
+                        <span class="m-menu__link-text">
+               Criar nova
+               </span>
+                    </a>
+                </li>
+                <li class="m-menu__item  <?=$page == "units-list" || $page == "units-edit" ? $activeSubItem : ""?>" aria-haspopup="true" >
+                    <a  href="main.php?page=units-list" class="m-menu__link ">
+                        <i class="m-menu__link-bullet m-menu__link-bullet--dot">
+                            <span></span>
+                        </i>
+                        <span class="m-menu__link-text">
+               Listar unidades
+               </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </li>
 </ul>
+<script>
+
+    //REMOVE FROM PROD AFTER UPGRADE
+    jQuery(document).ready(function() {
+
+        if(sessionStorage.getItem("local")) {
+            //pegar dados da sessão do admin e popular os campos necessários
+
+            var local = JSON.parse(sessionStorage.getItem("local"));
+            
+            if (local.localId == 1){
+
+                console.log(local.localId);
+
+
+                $("#menu-unidades").attr("style", "visibility: visible");
+
+            }
+
+        }
+    });
+</script>
